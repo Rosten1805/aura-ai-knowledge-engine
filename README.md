@@ -22,10 +22,11 @@ Estas funcionalidades se construyen de forma progresiva: primero el motor RAG (G
 
 | Capa | Tecnología |
 |---|---|
+| Frontend | React + TypeScript |
 | Backend | Python 3.12, FastAPI, Pydantic, Boto3 (LangChain solo donde aporta valor real) |
-| IA | Amazon Bedrock (modelo Nova + embeddings), Bedrock Knowledge Bases, S3 Vectors |
-| Infraestructura | Terraform, VPC multi-AZ, Amazon EKS, ALB, ECR, S3, Secrets Manager |
-| CI/CD | Jenkins (Pipeline as Code) con SAST, SCA, secret scanning, IaC scanning, DAST y security gates |
+| IA | Amazon Bedrock (modelo Nova + Titan Embeddings), Bedrock Knowledge Bases, S3 Vectors |
+| Infraestructura | Terraform, VPC multi-AZ (2 NAT Gateways), Amazon EKS, ALB, ECR, S3, Secrets Manager, Systems Manager |
+| CI/CD | Jenkins (Pipeline as Code) con SAST (Semgrep), SCA (pip-audit), secret scanning (Gitleaks), IaC scanning (Checkov), DAST (OWASP ZAP) y security gates |
 | Observabilidad | Prometheus + Grafana + CloudWatch |
 
 Detalle completo de la arquitectura, diagramas (infraestructura, flujo RAG, pipeline DevSecOps), presupuesto estimado y decisiones técnicas: ver [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -33,6 +34,8 @@ Detalle completo de la arquitectura, diagramas (infraestructura, flujo RAG, pipe
 ## Metodología
 
 El proyecto avanza en 10 fases verificables (diseño → backend → motor RAG → frontend → contenedorización → infraestructura AWS → Jenkins → observabilidad → funcionalidades avanzadas → entrega). No se avanza de fase sin verificar lo construido en la anterior. El detalle de cada fase y su estado está en [ARCHITECTURE.md](ARCHITECTURE.md#8-orden-de-implementación-resumen-de-fases).
+
+El proyecto trabaja con tres entornos: **dev** (local, Docker Compose, sin AWS), y **staging**/**prod** como namespaces separados dentro del mismo clúster EKS — detalle completo en [ARCHITECTURE.md §3.6](ARCHITECTURE.md#36-estrategia-de-entornos-dev--staging--prod).
 
 ## Restricciones del proyecto
 
@@ -45,15 +48,16 @@ El proyecto avanza en 10 fases verificables (diseño → backend → motor RAG �
 ```text
 aura-ai-knowledge-engine/
 ├── backend/            # FastAPI, lógica de negocio, tests
-├── frontend/           # Interfaz de usuario
-├── infrastructure/     # Terraform (bootstrap, environments, modules)
-├── kubernetes/         # Manifests de despliegue en EKS
+├── frontend/           # React + TypeScript
+├── infrastructure/     # Terraform (bootstrap, environments/staging+prod, modules)
+├── kubernetes/         # Manifests por entorno (staging/, prod/)
 ├── jenkins/            # Jenkinsfile y pipeline DevSecOps
 ├── monitoring/         # Prometheus y Grafana
 ├── security/           # Políticas y configuración de seguridad
 ├── evaluations/        # Framework de evaluación de IA
 ├── docs/               # Diagramas y documentación adicional
-└── scripts/            # Automatizaciones (arranque, apagado, utilidades)
+├── scripts/            # Automatizaciones (arranque, apagado, utilidades)
+└── docker-compose.yml  # entorno dev local, sin AWS
 ```
 
 ## Próximos pasos
